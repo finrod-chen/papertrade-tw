@@ -1,0 +1,27 @@
+# 機密：API token
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# 行情快取
+data/raw/
+
+# 使用者執行期狀態（不進版控）
+logs/
+data/settings.json
+data/optimal_params.json
+
+# 預覽工具設定（本機用）
+.claude/launch.json
+
+# 圖表輸出
+*.png
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,11 @@
+backtrader==1.9.78.123
+pandas>=2.0.0
+numpy>=1.24.0
+requests>=2.31.0
+yfinance>=0.2.40
+matplotlib>=3.7.0
+tabulate>=0.9.0
+rich>=13.0.0
+python-dotenv>=1.0.0
+flask>=3.0.0
+gunicorn>=21.0.0   # 正式部署用（Linux）；Windows 開發用 py run_web.py 即可
