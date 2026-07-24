@@ -49,6 +49,22 @@ docker run -p 5000:5000 -e FINMIND_TOKEN=你的token \
   -v ./logs:/app/logs -v ./data:/app/data tw-paper-trade
 ```
 
+## Cloudflare 部署
+
+專案內建 Cloudflare Containers 部署設定（`wrangler.jsonc` + `src/worker.js`），
+push 到 `main` 會由 GitHub Actions 自動建置容器並部署（`.github/workflows/deploy.yml`）。
+
+一次性設定：
+
+1. Cloudflare 帳號需開通 **Workers Paid** 方案（Containers 需求）
+2. 在 GitHub repo → Settings → Secrets and variables → Actions 新增：
+   - `CLOUDFLARE_API_TOKEN`（建立方式：Cloudflare Dashboard → My Profile → API Tokens → *Edit Cloudflare Workers* 範本）
+   - `CLOUDFLARE_ACCOUNT_ID`（Dashboard 右側欄可查）
+3. （選用）設定行情 Token：`npx wrangler secret put FINMIND_TOKEN`
+
+> 注意：容器磁碟為暫時性儲存，紙盤帳戶與交易日誌會在容器休眠重啟後歸零，
+> 作為作品集展示（demo）用途沒有問題；若要長期保存請掛外部儲存或自架。
+
 ## 架構
 
 ```

@@ -14,5 +14,5 @@ VOLUME ["/app/logs", "/app/data"]
 
 EXPOSE 5000
 
-# 生產用 gunicorn（2 workers）
-CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:5000", "webapp.app:app"]
+# 生產用 gunicorn（2 workers；timeout 調高以容納盤前掃描/回測等長請求）
+CMD ["gunicorn", "-w", "2", "--timeout", "120", "-b", "0.0.0.0:5000", "webapp.app:app"]

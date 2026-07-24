@@ -1,6 +1,11 @@
 # 機密：API token
 .env
 
+# Node（Cloudflare 部署工具）
+node_modules/
+package-lock.json
+.wrangler/
+
 # Python
 __pycache__/
 *.py[cod]
