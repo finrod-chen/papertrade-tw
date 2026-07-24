@@ -52,8 +52,3 @@ class BollingerBand(BaseStrategy):
                 self.log(f"布林反彈買入 @ {close:.2f}  下軌:{bot:.2f}")
                 self.order = self.buy(size=self.p.trade_size)
                 self.entry_price = close
-
-    def notify_order(self, order):
-        super().notify_order(order)
-        if order.status == order.Completed:
-            self.order = None

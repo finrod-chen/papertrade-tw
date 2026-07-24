@@ -35,11 +35,16 @@ class PaperEngine:
 
     def buy(self, stock_id: str, price: float, size: int, note: str = "") -> bool:
         """買進（多單進場）"""
+        if price <= 0 or size <= 0:
+            console.print(f"[red]參數錯誤：價格與股數必須為正數（price={price}, size={size}）[/red]")
+            return False
         if not self._check_daily_loss():
             return False
 
-        cost = price * size * (1 + SLIPPAGE)
-        commission = _calc_commission(price, size, is_sell=False)
+        # 實際成交價含滑價，後續損益與停損都以此為基準
+        actual_price = price * (1 + SLIPPAGE)
+        cost = actual_price * size
+        commission = _calc_commission(actual_price, size, is_sell=False)
         total_cost = cost + commission
 
         if total_cost > self.capital:
@@ -47,30 +52,35 @@ class PaperEngine:
             return False
 
         self.capital -= total_cost
-        pos = self.pm.open(stock_id, price, size)
-        self._trade_counter += 1
+        self.pm.open(stock_id, actual_price, size, entry_commission=commission)
 
         console.print(
-            f"[green]✓ 買進 {stock_id}  {size}股 @ {price:.2f}  "
+            f"[green]✓ 買進 {stock_id}  {size}股 @ {actual_price:.2f}(含滑價)  "
             f"手續費:{commission:.0f}  剩餘資金:{self.capital:,.0f}[/green]"
         )
         return True
 
     def sell(self, stock_id: str, price: float, exit_reason: str = "SIGNAL", note: str = "") -> bool:
         """賣出平倉（多單出場）"""
+        if price <= 0:
+            console.print(f"[red]參數錯誤：價格必須為正數（price={price}）[/red]")
+            return False
         pos = self.pm.get(stock_id)
         if not pos:
             console.print(f"[red]無 {stock_id} 部位[/red]")
             return False
 
         actual_price = price * (1 - SLIPPAGE)
-        commission = _calc_commission(price, pos.size, is_sell=True)
-        proceeds = actual_price * pos.size - commission
+        sell_commission = _calc_commission(actual_price, pos.size, is_sell=True)
+        proceeds = actual_price * pos.size - sell_commission
         gross_pnl = (actual_price - pos.entry_price) * pos.size
-        net_pnl = gross_pnl - commission
+        # 淨損益 = 毛損益 - 賣出成本 - 買進手續費（買進時已自資金扣除）
+        total_commission = sell_commission + pos.entry_commission
+        net_pnl = gross_pnl - total_commission
 
         self.capital += proceeds
         self.pm.close(stock_id)
+        self._trade_counter += 1  # 以「平倉」為一筆完整交易編號，確保 ID 唯一
 
         record = TradeRecord(
             trade_id=f"T{self._trade_counter:05d}",
@@ -82,7 +92,7 @@ class PaperEngine:
             exit_price=price,
             size=pos.size,
             gross_pnl=round(gross_pnl, 0),
-            commission=round(commission, 0),
+            commission=round(total_commission, 0),
             net_pnl=round(net_pnl, 0),
             exit_reason=exit_reason,
             note=note,
@@ -99,7 +109,14 @@ class PaperEngine:
     # ── 風控 ─────────────────────────────────────────────────────────
 
     def _check_daily_loss(self) -> bool:
-        daily_loss = (self.capital - self.daily_start_capital) / self.daily_start_capital
+        # 以「現金 + 持倉成本」估算權益：買進本身不是虧損，
+        # 只有已實現虧損才會讓這個值下降（未實現損益需即時報價，不計入）
+        position_cost = sum(
+            p.entry_price * abs(p.size) + p.entry_commission
+            for p in self.pm.all_positions()
+        )
+        equity_basis = self.capital + position_cost
+        daily_loss = (equity_basis - self.daily_start_capital) / self.daily_start_capital
         if daily_loss <= -MAX_DAILY_LOSS:
             console.print(
                 f"[bold red]⚠ 單日虧損達 {daily_loss*100:.1f}%，今日停止交易！[/bold red]"

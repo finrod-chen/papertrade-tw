@@ -36,12 +36,19 @@ def portfolio_backtest(
         f"{n} 支  總資金 {total_capital:,.0f}  每股 {per_cap:,.0f}\n"
     )
 
+    # 依實際資料區間計算年數（供年化交易頻率用）
+    spans = [
+        (df["date"].max() - df["date"].min()).days
+        for df in stock_dfs.values() if len(df) > 1
+    ]
+    years = max(spans) / 365.25 if spans else 1.0
+
     results = []
     for sid, df in stock_dfs.items():
         params = dict((per_stock_params or {}).get(sid) or strategy_params or {})
 
         # ── 自動計算合理交易量 ──────────────────────────────────
-        # 用資料中位數價格估算，確保 1 筆交易不超過分配資金的 95%
+        # 用資料中位數價格估算，確保 1 筆交易不超過分配資金的 90%
         median_price = float(df["close"].median())
         max_shares   = int(per_cap * 0.90 / median_price)
         # 台股標準張：1000股；ETF也是1000股（或100股，保守取1000）
@@ -56,6 +63,7 @@ def portfolio_backtest(
                 plot=False,
                 strategy_params=params,
                 extra_data=extra_data,
+                verbose=False,
             )
             m["name"]       = (names or {}).get(sid, sid)
             m["capital"]    = per_cap
@@ -69,17 +77,17 @@ def portfolio_backtest(
         console.print("[red]無有效結果[/red]")
         return {}
 
-    return _aggregate(results, total_capital)
+    return _aggregate(results, total_capital, years)
 
 
-def _aggregate(results: list, total_capital: float) -> dict:
+def _aggregate(results: list, total_capital: float, years: float = 1.0) -> dict:
     df = pd.DataFrame(results)
 
     total_final  = df["final_value"].sum()
     total_ret    = (total_final - total_capital) / total_capital * 100
     pos_cnt      = int((df["total_return_pct"] > 0).sum())
     total_trades = int(df["total_trades"].sum())
-    trades_py    = total_trades / 4   # 假設 4 年資料
+    trades_py    = total_trades / max(years, 1e-9)
 
     valid_wr = df[df["total_trades"] > 0]["win_rate_pct"]
     avg_wr   = float(valid_wr.mean()) if not valid_wr.empty else 0.0

@@ -62,9 +62,10 @@ def validate():
             if len(df_is) < 80 or len(df_oos) < 60:
                 continue
 
-            # 1. 訓練期找最佳參數（靜默）
+            # 1. 訓練期找最佳參數（靜默；min_trades 過濾避免挑到 1~2 筆賭中的雜訊參數）
             res = grid_search(MAFilteredCross, df_is, PARAM_GRID,
-                              stock_id=sid, metric="total_return_pct", top_n=1)
+                              stock_id=sid, metric="total_return_pct", top_n=1,
+                              min_trades=5, verbose=False)
             if res.empty:
                 continue
             best = res.iloc[0]
@@ -74,7 +75,7 @@ def validate():
 
             # 2. 測試期用該參數驗收
             m = run_backtest(MAFilteredCross, df_oos, stock_id=sid,
-                             plot=False, strategy_params=params)
+                             plot=False, strategy_params=params, verbose=False)
             oos_ret = m["total_return_pct"]
 
             # 3. 基準：同期 buy-and-hold

@@ -1,8 +1,9 @@
 """
-均線黃金/死亡交叉當沖策略
+均線黃金/死亡交叉策略（日線波段版）
 - 進場：5MA 上穿 20MA（多單）
 - 出場：5MA 下穿 20MA 或觸停損
-- 當日未平倉收盤前強制出場
+註：以日線回測時訂單於次日開盤成交，停損基準採實際成交價
+    （由 BaseStrategy.notify_order 回填）
 """
 import backtrader as bt
 from .base import BaseStrategy
@@ -32,28 +33,23 @@ class MovingAvgCross(BaseStrategy):
 
         in_position = self.position.size > 0
 
-        # 停損檢查
         if in_position and self.entry_price:
+            # 停損
             if self.stop_loss_check(self.entry_price, self.data.close[0]):
                 self.log(f"觸發停損 進場:{self.entry_price:.2f} 現價:{self.data.close[0]:.2f}")
                 self.order = self.sell(size=self.p.trade_size)
                 return
-
-        # 當沖：收盤前一根強制平倉（使用日線時跳過）
-        if in_position:
-            self.order = self.sell(size=self.p.trade_size)
-            return
+            # 死亡交叉出場
+            if self.crossover < 0:
+                self.log(f"死亡交叉 賣出 @ {self.data.close[0]:.2f}")
+                self.order = self.sell(size=self.p.trade_size)
+                return
 
         # 進場：黃金交叉
         if not in_position and self.crossover > 0:
             self.log(f"黃金交叉 買入 @ {self.data.close[0]:.2f}")
             self.order = self.buy(size=self.p.trade_size)
-            self.entry_price = self.data.close[0]
-
-    def notify_order(self, order):
-        super().notify_order(order)
-        if order.status == order.Completed:
-            self.order = None
+            self.entry_price = self.data.close[0]  # 暫記訊號價，成交後回填實際價
 
 
 class RSIStrategy(BaseStrategy):
@@ -94,8 +90,3 @@ class RSIStrategy(BaseStrategy):
             self.log(f"RSI 超賣買入 RSI:{self.rsi[0]:.1f} @ {self.data.close[0]:.2f}")
             self.order = self.buy(size=self.p.trade_size)
             self.entry_price = self.data.close[0]
-
-    def notify_order(self, order):
-        super().notify_order(order)
-        if order.status == order.Completed:
-            self.order = None

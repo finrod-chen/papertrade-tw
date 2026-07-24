@@ -128,7 +128,10 @@ def api_buy():
     d = request.get_json(force=True)
     engine = get_engine()
     try:
-        ok = engine.buy(d["stock_id"].strip(), float(d["price"]), int(d["size"]),
+        price, size = float(d["price"]), int(d["size"])
+        if price <= 0 or size <= 0:
+            return jsonify({"ok": False, "msg": "價格與股數必須為正數"}), 400
+        ok = engine.buy(d["stock_id"].strip(), price, size,
                         note=d.get("note", ""))
     except Exception as e:
         return jsonify({"ok": False, "msg": f"參數錯誤：{e}"}), 400
@@ -144,7 +147,10 @@ def api_sell():
     engine = get_engine()
     reason = d.get("reason", "SIGNAL")
     try:
-        ok = engine.sell(d["stock_id"].strip(), float(d["price"]),
+        price = float(d["price"])
+        if price <= 0:
+            return jsonify({"ok": False, "msg": "價格必須為正數"}), 400
+        ok = engine.sell(d["stock_id"].strip(), price,
                          exit_reason=reason, note=d.get("note", ""))
     except Exception as e:
         return jsonify({"ok": False, "msg": f"參數錯誤：{e}"}), 400
@@ -156,8 +162,8 @@ def api_sell():
 
 @app.route("/api/reset", methods=["POST"])
 def api_reset():
-    reset_engine()
-    return jsonify({"ok": True, "msg": f"帳戶已重置為 {INITIAL_CAPITAL:,.0f}"})
+    engine = reset_engine()
+    return jsonify({"ok": True, "msg": f"帳戶已重置為 {engine.start_capital:,.0f}"})
 
 
 @app.route("/api/price/<stock_id>")
@@ -318,7 +324,8 @@ def _benchmark_data(benchmark_id: str = "0050") -> dict:
     start = min(_parse(r.entry_time) for r in records).strftime("%Y-%m-%d")
     end   = max(_parse(r.exit_time)  for r in records).strftime("%Y-%m-%d")
     paper_pnl = sum(r.net_pnl for r in records)
-    paper_ret = paper_pnl / INITIAL_CAPITAL * 100
+    from webapp.settings_store import get_initial_capital
+    paper_ret = paper_pnl / get_initial_capital() * 100
 
     bench_ret = None
     try:
@@ -378,7 +385,7 @@ def api_backtest():
         df = fetch_daily_ohlcv(d["stock"].strip(), d["start"], d["end"])
         if len(df) < 30:
             return jsonify({"ok": False, "msg": "資料不足"}), 400
-        m = run_backtest(cls, df, stock_id=d["stock"], plot=False)
+        m = run_backtest(cls, df, stock_id=d["stock"], plot=False, verbose=False)
         m["bars"] = len(df)
         return jsonify({"ok": True, "metrics": m})
     except Exception as e:

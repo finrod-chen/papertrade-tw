@@ -7,10 +7,11 @@ from typing import Optional
 @dataclass
 class Position:
     stock_id: str
-    entry_price: float
+    entry_price: float             # 含滑價的實際成交價
     size: int                      # 股數（正數=多，負數=空）
     entry_time: datetime = field(default_factory=datetime.now)
     stop_loss_price: Optional[float] = None
+    entry_commission: float = 0.0  # 進場手續費（平倉時計入淨損益）
 
     @property
     def is_long(self) -> bool:
@@ -34,11 +35,13 @@ class PositionManager:
         self.positions: dict[str, Position] = {}
         self.max_loss_pct = max_loss_pct
 
-    def open(self, stock_id: str, price: float, size: int) -> Position:
+    def open(self, stock_id: str, price: float, size: int,
+             entry_commission: float = 0.0) -> Position:
         if stock_id in self.positions:
             raise ValueError(f"{stock_id} 已有部位，請先平倉")
         stop = price * (1 - self.max_loss_pct) if size > 0 else price * (1 + self.max_loss_pct)
-        pos = Position(stock_id=stock_id, entry_price=price, size=size, stop_loss_price=stop)
+        pos = Position(stock_id=stock_id, entry_price=price, size=size,
+                       stop_loss_price=stop, entry_commission=entry_commission)
         self.positions[stock_id] = pos
         return pos
 

@@ -83,6 +83,9 @@ def cmd_wf(args):
         print(f"未知策略 '{args.strategy}'，可用：{list(STRATEGIES.keys())}")
         sys.exit(1)
 
+    import json
+    param_grid = json.loads(args.grid) if args.grid else None
+
     df = fetch_daily_ohlcv(args.stock, args.start, args.end)
     print(f"載入 {len(df)} 根 K 棒")
     walk_forward_test(
@@ -91,6 +94,7 @@ def cmd_wf(args):
         train_days=args.train,
         test_days=args.test,
         step_days=args.step,
+        param_grid=param_grid,
     )
 
 
@@ -257,6 +261,9 @@ def main():
     p.add_argument("--train",    type=int, default=252, help="訓練天數 (預設252)")
     p.add_argument("--test",     type=int, default=63,  help="OOS測試天數 (預設63)")
     p.add_argument("--step",     type=int, default=63,  help="滾動步長 (預設63)")
+    p.add_argument("--grid",     default=None,
+                   help='JSON 參數網格；提供後每視窗於訓練期優化（真 Walk-Forward），'
+                        '如 \'{"fast_period":[5,8],"slow_period":[15,20]}\'')
 
     # optimize (網格搜索)
     p = sub.add_parser("optimize", help="參數網格搜索")

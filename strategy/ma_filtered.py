@@ -75,8 +75,3 @@ class MAFilteredCross(BaseStrategy):
                 )
                 self.order = self.buy(size=self.p.trade_size)
                 self.entry_price = close
-
-    def notify_order(self, order):
-        super().notify_order(order)
-        if order.status == order.Completed:
-            self.order = None

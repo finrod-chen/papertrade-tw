@@ -127,11 +127,11 @@ class AdvancedStrategy(BaseStrategy):
                 self.highest      = close
                 self.trail_stop   = close - self.p.atr_mult * atr_now
 
-    def notify_order(self, order):
-        super().notify_order(order)
-        if order.status == order.Completed:
-            self.order = None
-            if not self.position.size:   # 剛賣出
-                self.entry_price = None
-                self.highest     = None
-                self.trail_stop  = None
+    # 買單成交 → 以實際成交價重設追蹤停損基準（訊號價與成交價有落差）
+    def on_buy_filled(self, price: float):
+        self.highest    = price
+        self.trail_stop = price - self.p.atr_mult * self.atr[0]
+
+    def on_position_closed(self):
+        self.highest    = None
+        self.trail_stop = None

@@ -16,6 +16,15 @@ from config import INITIAL_CAPITAL
 console = Console()
 
 
+def _start_capital() -> float:
+    """優先讀取使用者於 Web 設定的初始資金，否則退回 config 預設值"""
+    try:
+        from webapp.settings_store import get_initial_capital
+        return get_initial_capital()
+    except Exception:
+        return INITIAL_CAPITAL
+
+
 def _parse(ts: str) -> datetime:
     for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
         try:
@@ -39,7 +48,7 @@ def benchmark_compare(benchmark_id: str = "0050"):
 
     # 紙盤總損益
     paper_pnl = sum(r.net_pnl for r in records)
-    paper_ret = paper_pnl / INITIAL_CAPITAL * 100
+    paper_ret = paper_pnl / _start_capital() * 100
 
     # 基準：同期間 buy-and-hold
     try:

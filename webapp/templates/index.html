@@ -1,34 +1,35 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>台股紙盤交易系統</title>
+  <meta name="description" content="台股紙盤交易系統 — 紀律訓練器。回測、盤前掃描、紙盤下單與紀律計分。">
+  <title>PaperTrade TW — 台股紙盤交易系統</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 <div class="app">
 
-  <!-- ===== 側邊欄 ===== -->
+  <!-- ═════════ 側邊欄 ═════════ -->
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-mark">
+      <div class="brand-mark" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 17l5-5 4 4 8-8"/><path d="M21 8v5"/><path d="M21 8h-5"/>
         </svg>
       </div>
       <div class="brand-text">
-        <strong>紙盤交易</strong>
-        <span>Paper Trading</span>
+        <strong>PaperTrade&nbsp;TW</strong>
+        <span>紀律訓練器</span>
       </div>
     </div>
 
-    <nav class="nav">
+    <nav class="nav" aria-label="主選單">
       <button class="tab active" data-tab="dashboard">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
         <span>總覽</span>
       </button>
       <button class="tab" data-tab="scan">
@@ -36,7 +37,7 @@
         <span>盤前掃描</span>
       </button>
       <button class="tab" data-tab="paper">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10l-3 3 3 3"/><path d="M4 13h11"/><path d="M17 8l3-3-3-3" transform="translate(0 6)"/><path d="M20 11H9"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7h13"/><path d="M8 12h13"/><path d="M8 17h13"/><path d="M3 7h.01"/><path d="M3 12h.01"/><path d="M3 17h.01"/></svg>
         <span>紙盤交易</span>
       </button>
       <button class="tab" data-tab="discipline">
@@ -48,18 +49,22 @@
         <span>策略回測</span>
       </button>
       <button class="tab" data-tab="settings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 008 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H1a2 2 0 110-4h.09A1.65 1.65 0 002.6 8a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H8a1.65 1.65 0 001-1.51V1a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V8a1.65 1.65 0 001.51 1H23a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
         <span>設定</span>
       </button>
     </nav>
 
     <div class="sidebar-foot">
-      <div class="foot-badge">紀律訓練器</div>
-      <p>僅供策略驗證，非投資建議</p>
+      <button class="theme-toggle" id="themeToggle" title="切換深/淺色主題">
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <span class="theme-label">主題</span>
+      </button>
+      <p class="disclaimer">模擬交易 · 僅供策略驗證與紀律訓練，非投資建議</p>
     </div>
   </aside>
 
-  <!-- ===== 主區 ===== -->
+  <!-- ═════════ 主區 ═════════ -->
   <div class="main">
     <header class="topbar">
       <div class="topbar-title">
@@ -69,178 +74,186 @@
       <div class="account-pill">
         <div class="pill-item">
           <span class="pill-label">總權益</span>
-          <span class="pill-value" id="pillEquity">—</span>
+          <span class="pill-value num" id="pillEquity">—</span>
         </div>
         <div class="pill-divider"></div>
         <div class="pill-item">
           <span class="pill-label">總報酬</span>
-          <span class="pill-value" id="pillReturn">—</span>
+          <span class="pill-value num" id="pillReturn">—</span>
         </div>
       </div>
     </header>
 
     <main class="content">
 
-      <!-- ===== 總覽 ===== -->
+      <!-- ═════ 總覽 ═════ -->
       <section class="tab-panel active" id="dashboard">
-        <div class="grid grid-4">
+        <div class="stat-grid">
           <div class="card stat">
-            <div class="stat-top"><span class="stat-label">現金</span><span class="stat-dot dot-blue"></span></div>
-            <div class="stat-num" id="dCash">—</div>
+            <span class="stat-label">現金</span>
+            <div class="stat-num num" id="dCash">—</div>
           </div>
           <div class="card stat">
-            <div class="stat-top"><span class="stat-label">持倉市值</span><span class="stat-dot dot-violet"></span></div>
-            <div class="stat-num" id="dPosVal">—</div>
+            <span class="stat-label">持倉市值</span>
+            <div class="stat-num num" id="dPosVal">—</div>
+          </div>
+          <div class="card stat stat-hero">
+            <span class="stat-label">總權益</span>
+            <div class="stat-num num" id="dEquity">—</div>
+            <div class="stat-delta num" id="dEquityDelta"></div>
           </div>
           <div class="card stat">
-            <div class="stat-top"><span class="stat-label">總權益</span><span class="stat-dot dot-grad"></span></div>
-            <div class="stat-num" id="dEquity">—</div>
-          </div>
-          <div class="card stat">
-            <div class="stat-top"><span class="stat-label">今日已實現</span><span class="stat-dot dot-amber"></span></div>
-            <div class="stat-num" id="dRealized">—</div>
+            <span class="stat-label">今日已實現</span>
+            <div class="stat-num num" id="dRealized">—</div>
           </div>
         </div>
 
-        <div class="card">
-          <div class="card-head">
-            <h2>目前持倉</h2>
-            <button class="btn-ghost" onclick="App.loadAccount()">↻ 刷新</button>
+        <div class="dash-grid">
+          <div class="card">
+            <div class="card-head">
+              <h2>累計損益曲線</h2>
+              <span class="card-sub" id="sparkMeta"></span>
+            </div>
+            <div class="spark-wrap" id="sparkWrap">
+              <p class="empty">尚無平倉紀錄</p>
+            </div>
           </div>
-          <div id="dashPositions"><p class="empty">載入中…</p></div>
+
+          <div class="card">
+            <div class="card-head">
+              <h2>目前持倉</h2>
+              <button class="btn ghost sm" onclick="App.loadAccount()" title="重新整理">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.3"/><path d="M21 3v6h-6"/></svg>
+                刷新
+              </button>
+            </div>
+            <div id="dashPositions"><div class="skeleton-rows"></div></div>
+          </div>
         </div>
       </section>
 
-      <!-- ===== 盤前掃描 ===== -->
+      <!-- ═════ 盤前掃描 ═════ -->
       <section class="tab-panel" id="scan">
         <div class="card">
           <div class="card-head">
             <h2>盤前訊號掃描</h2>
-            <button class="btn-primary" id="scanBtn" onclick="App.runScan()">開始掃描</button>
+            <button class="btn primary" id="scanBtn" onclick="App.runScan()">開始掃描</button>
           </div>
-          <p class="hint">對追蹤清單逐檔計算三種策略訊號，<strong>2/3 以上同向</strong>才形成「共識」。<span class="muted">（掃描需數秒，逐檔抓即時資料）</span></p>
+          <p class="hint">對追蹤清單逐檔計算三種策略訊號，<strong>2/3 以上同向</strong>才形成「共識」。
+            <span class="muted">共識投票機制屬參考性質、未經回測驗證——最終決策與紀律在你。</span></p>
 
           <div class="legend">
             <div class="legend-item">
-              <span class="legend-k k-blue">均線</span>
-              <p>5 日線與 20 日線的交叉。<b>黃金交叉</b>（短線向上穿長線）＝買進訊號；<b>死亡交叉</b>（向下跌破）＝賣出。判斷中期趨勢方向。</p>
+              <span class="legend-k k-ma">均線</span>
+              <p>5 日線與 20 日線交叉。<b>黃金交叉</b>＝買進訊號；<b>死亡交叉</b>＝賣出。判斷中期趨勢方向。</p>
             </div>
             <div class="legend-item">
-              <span class="legend-k k-violet">RSI</span>
-              <p>相對強弱指標（14 日）。<b>&lt; 30 超賣</b>可能反彈＝買；<b>&gt; 70 超買</b>可能回檔＝賣。衡量短線買賣力道是否過熱。</p>
+              <span class="legend-k k-rsi">RSI</span>
+              <p>相對強弱指標（14 日，Wilder 平滑、與回測引擎同源）。<b>&lt;30 超賣</b>＝買；<b>&gt;70 超買</b>＝賣。</p>
             </div>
             <div class="legend-item">
-              <span class="legend-k k-amber">布林</span>
-              <p>布林通道（20 日、2 倍標準差）。股價<b>跌破下軌後站回</b>＝買（反彈）；<b>觸及上軌</b>＝賣。判斷價格相對高低位置。</p>
+              <span class="legend-k k-bb">布林</span>
+              <p>布林通道（20 日、2σ）。<b>跌破下軌後站回</b>＝買（反彈）；<b>觸及上軌</b>＝賣。判斷價格相對位置。</p>
             </div>
-          </div>
-
-          <div class="legend-tags">
-            訊號標記：
-            <span class="tag tag-buy">買</span> 進場
-            <span class="tag tag-sell">賣</span> 出場
-            <span class="tag tag-watch">關注</span> 接近訊號
-            <span class="tag tag-hold">持有 / —</span> 無訊號
           </div>
 
           <div id="scanResult"></div>
         </div>
       </section>
 
-      <!-- ===== 紙盤交易 ===== -->
+      <!-- ═════ 紙盤交易 ═════ -->
       <section class="tab-panel" id="paper">
-        <div class="grid grid-2">
+        <div class="paper-grid">
           <div class="card">
             <h2>下單</h2>
             <div class="form">
               <label>股票代號
-                <input id="orderStock" placeholder="如 2330" onblur="App.autofillPrice()">
+                <input id="orderStock" placeholder="如 2330" autocomplete="off" onblur="App.autofillPrice()">
               </label>
               <label>價格
                 <div class="inline">
-                  <input id="orderPrice" type="number" step="0.01" placeholder="0.00">
-                  <button class="btn-ghost" onclick="App.autofillPrice()">即時報價</button>
+                  <input id="orderPrice" type="number" step="0.01" min="0.01" placeholder="0.00">
+                  <button class="btn ghost" onclick="App.autofillPrice()">即時報價</button>
                 </div>
               </label>
               <label>股數
-                <input id="orderSize" type="number" step="1000" value="1000">
+                <input id="orderSize" type="number" step="1000" min="1" value="1000">
               </label>
-              <div class="btn-row">
-                <button class="btn-buy" onclick="App.buy()">買進</button>
-              </div>
+              <button class="btn buy block" onclick="App.buy()">買進</button>
+              <p class="form-note">成交將計入滑價 0.05%、手續費 0.1425%；賣出另計證交稅 0.3%。</p>
             </div>
-            <div class="msg" id="orderMsg"></div>
           </div>
 
           <div class="card">
             <div class="card-head">
               <h2>持倉 / 賣出</h2>
-              <button class="btn-ghost" onclick="App.loadAccount()">↻</button>
+              <button class="btn ghost sm" onclick="App.loadAccount()">刷新</button>
             </div>
-            <div id="paperPositions"><p class="empty">載入中…</p></div>
+            <div id="paperPositions"><div class="skeleton-rows"></div></div>
           </div>
         </div>
 
         <div class="card">
           <div class="card-head">
             <h2>交易日誌</h2>
-            <button class="btn-danger-ghost" onclick="App.resetAccount()">重置帳戶</button>
+            <button class="btn danger-ghost sm" onclick="App.resetAccount()">重置帳戶</button>
           </div>
           <div id="journalTable"></div>
         </div>
       </section>
 
-      <!-- ===== 紀律計分 ===== -->
+      <!-- ═════ 紀律計分 ═════ -->
       <section class="tab-panel" id="discipline">
-        <div class="card">
-          <div class="card-head">
-            <h2>紀律計分卡</h2>
-            <button class="btn-ghost" onclick="App.loadDiscipline()">↻ 重新計算</button>
+        <div class="disc-grid">
+          <div class="card">
+            <div class="card-head">
+              <h2>紀律計分卡</h2>
+              <button class="btn ghost sm" onclick="App.loadDiscipline()">重新計算</button>
+            </div>
+            <p class="hint">賺賠是市場給的，<strong>守不守紀律 100% 由你控制</strong>。這張表不獎勵賺錢，只獎勵紀律。</p>
+            <div id="scorecardBox"><div class="skeleton-rows"></div></div>
           </div>
-          <div id="scorecardBox"><p class="empty">載入中…</p></div>
-        </div>
-        <div class="card" id="benchmarkCard">
-          <h2>誠實之鏡 · 你 vs 買大盤放著</h2>
-          <div id="benchmarkBox"></div>
+          <div class="card">
+            <h2>誠實之鏡</h2>
+            <p class="hint">你的主動交易 vs 同期間買 0050 放著不動。</p>
+            <div id="benchmarkBox"></div>
+          </div>
         </div>
       </section>
 
-      <!-- ===== 策略回測 ===== -->
+      <!-- ═════ 策略回測 ═════ -->
       <section class="tab-panel" id="backtest">
         <div class="card">
           <h2>策略回測</h2>
           <div class="form-grid">
-            <label>股票代號<input id="btStock" value="2330"></label>
+            <label>股票代號<input id="btStock" value="2330" autocomplete="off"></label>
             <label>策略<select id="btStrategy"></select></label>
             <label>起始日<input id="btStart" type="date" value="2022-01-01"></label>
             <label>結束日<input id="btEnd" type="date" value="2024-01-01"></label>
           </div>
           <div class="strategy-desc" id="btStrategyDesc"></div>
-          <button class="btn-primary" id="btBtn" onclick="App.runBacktest()">執行回測</button>
+          <button class="btn primary" id="btBtn" onclick="App.runBacktest()">執行回測</button>
           <div id="backtestResult"></div>
         </div>
       </section>
 
-      <!-- ===== 設定 ===== -->
+      <!-- ═════ 設定 ═════ -->
       <section class="tab-panel" id="settings">
         <div class="card">
           <h2>帳戶設定</h2>
-          <p class="hint">設定紙盤的初始資金。<span class="muted">變更後會重置帳戶（清空持倉與資金，交易日誌保留）。</span></p>
-          <div class="form" style="max-width:380px">
+          <p class="hint">設定紙盤初始資金。<span class="muted">變更後會重置帳戶（清空持倉與資金，交易日誌保留）。</span></p>
+          <div class="form narrow">
             <label>初始資金（元）
               <input id="setCapital" type="number" step="10000" min="10000" placeholder="1000000">
             </label>
             <div class="quick-amounts">
-              <button class="chip" onclick="App.setCapInput(100000)">10萬</button>
-              <button class="chip" onclick="App.setCapInput(500000)">50萬</button>
-              <button class="chip" onclick="App.setCapInput(1000000)">100萬</button>
-              <button class="chip" onclick="App.setCapInput(3000000)">300萬</button>
+              <button class="chip" onclick="App.setCapInput(100000)">10 萬</button>
+              <button class="chip" onclick="App.setCapInput(500000)">50 萬</button>
+              <button class="chip" onclick="App.setCapInput(1000000)">100 萬</button>
+              <button class="chip" onclick="App.setCapInput(3000000)">300 萬</button>
             </div>
-            <div class="btn-row">
-              <button class="btn-primary" onclick="App.saveCapital()">套用並重置帳戶</button>
-            </div>
+            <button class="btn primary" onclick="App.saveCapital()">套用並重置帳戶</button>
           </div>
-          <div class="msg" id="capMsg"></div>
         </div>
 
         <div class="card">
@@ -249,15 +262,12 @@
             <span class="count-badge" id="watchCount"></span>
           </div>
           <p class="hint">這份清單用於「盤前掃描」。新增時會自動帶入股票名稱。</p>
-          <div class="form-grid" style="margin-bottom:14px">
-            <label>股票代號<input id="addStockId" placeholder="如 2603"></label>
-            <label>名稱（留空自動帶入）<input id="addStockName" placeholder="可留空"></label>
-            <label>產業（選填）<input id="addStockSector" placeholder="如 航運"></label>
-            <label class="label-btn">
-              <button class="btn-primary" onclick="App.addStock()">＋ 新增到清單</button>
-            </label>
+          <div class="form-grid watch-form">
+            <label>股票代號<input id="addStockId" placeholder="如 2603" autocomplete="off"></label>
+            <label>名稱<input id="addStockName" placeholder="留空自動帶入"></label>
+            <label>產業<input id="addStockSector" placeholder="選填"></label>
+            <label class="label-btn"><button class="btn primary" onclick="App.addStock()">＋ 新增</button></label>
           </div>
-          <div class="msg" id="watchMsg"></div>
           <div id="watchlistTable"></div>
         </div>
       </section>
@@ -265,6 +275,14 @@
     </main>
   </div>
 </div>
+
+<!-- ═════════ Modal ═════════ -->
+<div class="modal-backdrop" id="modalBackdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" id="modalBox"></div>
+</div>
+
+<!-- ═════════ Toast ═════════ -->
+<div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>

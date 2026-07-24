@@ -5,7 +5,14 @@ Walk-Forward 測試框架
 原理：
   把完整資料切成 N 個滾動視窗
   每個視窗：[─── 訓練期 ───][─ OOS 測試期 ─]
-  測試只看樣本外（OOS）的績效
+
+  - 有給 param_grid  → 每個視窗先在「訓練期」網格搜索最佳參數，
+                       再拿該參數跑「測試期」（真 Walk-Forward）
+  - 沒給 param_grid → 固定參數的滾動 OOS 測試
+
+  測試期資料前面會接上訓練期尾端的「熱身段」（warmup_days），
+  讓 MA60 等長週期指標在測試期第一天就已就緒——熱身段內不會產生
+  任何交易（指標最小週期恰好消耗完），績效只反映測試期。
 
 判定標準：
   - OOS 正報酬視窗 ≥ 60% → 策略具一致性
@@ -20,6 +27,9 @@ from .runner import run_backtest
 
 console = Console()
 
+# 熱身段長度需 ≥ 策略最長指標週期（MA60 + CrossOver 緩衝）
+DEFAULT_WARMUP_DAYS = 70
+
 
 def walk_forward_test(
     strategy_cls,
@@ -28,14 +38,19 @@ def walk_forward_test(
     train_days: int = 252,   # 訓練期 ≈ 1 年
     test_days:  int = 63,    # 測試期 ≈ 1 季
     step_days:  int = 63,    # 每次滾動 ≈ 1 季
+    warmup_days: int = DEFAULT_WARMUP_DAYS,
     plot: bool = False,
     strategy_params: dict = None,
+    param_grid: dict = None,       # 給了就做每視窗訓練期優化（真 WF）
+    opt_metric: str = "total_return_pct",
+    opt_min_trades: int = 5,
 ) -> dict:
     """
     滾動 Walk-Forward 測試，回傳彙總績效字典。
     """
     df = df.copy().sort_values("date").reset_index(drop=True)
     total = len(df)
+    warmup_days = min(warmup_days, train_days)  # 熱身段取自訓練期尾端
 
     # ── 切視窗 ────────────────────────────────────────────────────
     windows = []
@@ -61,13 +76,15 @@ def walk_forward_test(
         )
         return {}
 
+    mode = "每視窗訓練期優化（真 Walk-Forward）" if param_grid else "固定參數滾動 OOS"
     console.print(
         f"\n[bold cyan]Walk-Forward 測試  {stock_id}[/bold cyan]  "
-        f"訓練:{train_days}天  OOS測試:{test_days}天  視窗數:{len(windows)}"
+        f"訓練:{train_days}天  OOS測試:{test_days}天  熱身:{warmup_days}天  "
+        f"視窗數:{len(windows)}\n[dim]模式：{mode}[/dim]"
     )
     console.print(f"資料範圍：{df.iloc[0]['date'].date()} ~ {df.iloc[-1]['date'].date()}\n")
 
-    # ── 跑每個視窗的 OOS 測試 ─────────────────────────────────────
+    # ── 跑每個視窗 ───────────────────────────────────────────────
     oos_results = []
     for w in windows:
         console.print(
@@ -76,12 +93,32 @@ def walk_forward_test(
             f"OOS {w['test_start']}~{w['test_end']}[/dim]"
         )
         try:
+            params = dict(strategy_params or {})
+
+            # 1. 訓練期優化（真 WF 模式）
+            if param_grid:
+                from .optimizer import grid_search
+                res = grid_search(
+                    strategy_cls, w["train_df"].copy(), param_grid,
+                    stock_id=stock_id, metric=opt_metric,
+                    min_trades=opt_min_trades, verbose=False,
+                )
+                if not res.empty:
+                    best = res.iloc[0]
+                    params.update({k: best[k] for k in param_grid})
+                    console.print(f"[dim]    訓練期最佳參數：{ {k: best[k] for k in param_grid} }[/dim]")
+
+            # 2. 熱身段（訓練期尾端）+ 測試期 → 指標就緒後正好從測試期開始交易
+            feed = pd.concat(
+                [w["train_df"].tail(warmup_days), w["test_df"]],
+                ignore_index=True,
+            )
             m = run_backtest(
-                strategy_cls,
-                w["test_df"],       # 只用 OOS 資料跑
+                strategy_cls, feed,
                 stock_id=stock_id,
                 plot=plot,
-                strategy_params=strategy_params,
+                strategy_params=params or None,
+                verbose=False,
             )
             m["window"]     = w["window"]
             m["test_start"] = w["test_start"]
@@ -100,7 +137,7 @@ def walk_forward_test(
 
 def _summarize(results: list) -> dict:
     rets   = [r["total_return_pct"] for r in results]
-    sharpes = [r["sharpe_ratio"] for r in results if r.get("sharpe_ratio")]
+    sharpes = [r["sharpe_ratio"] for r in results if r.get("sharpe_ratio") is not None]
     wins   = [r["win_rate_pct"]     for r in results]
     dds    = [r["max_drawdown_pct"] for r in results]
 
@@ -139,7 +176,7 @@ def _print_results(results: list, summary: dict):
 
     for r in results:
         col = "green" if r["total_return_pct"] > 0 else "red"
-        sharpe = f"{r['sharpe_ratio']:.3f}" if r.get("sharpe_ratio") else "N/A"
+        sharpe = f"{r['sharpe_ratio']:.3f}" if r.get("sharpe_ratio") is not None else "N/A"
         table.add_row(
             str(r["window"]),
             f"{r['test_start']} ~ {r['test_end']}",
@@ -164,7 +201,7 @@ def _print_results(results: list, summary: dict):
   正報酬視窗：[cyan]{summary['positive_windows']}/{summary['windows']}[/cyan] ({summary['consistency_pct']:.0f}%)
   平均 OOS 報酬：[cyan]{summary['avg_oos_return']:+.2f}%[/cyan]
   報酬標準差：  {summary['std_oos_return']:.2f}%
-  平均夏普比率：{summary['avg_sharpe'] if summary['avg_sharpe'] else 'N/A'}
+  平均夏普比率：{summary['avg_sharpe'] if summary['avg_sharpe'] is not None else 'N/A'}
   平均最大回撤：{summary['avg_max_dd']:.2f}%
   平均勝率：    {summary['avg_win_rate']:.1f}%
 

@@ -79,18 +79,14 @@ def optimize_all(start: str = "2020-01-01", end: str = "2024-01-01",
                 stock_id=sid,
                 metric="total_return_pct",
                 top_n=3,
+                min_trades=min_trades,
+                verbose=False,
             )
 
             if results.empty:
                 continue
 
-            # 過濾交易次數太少的結果
-            valid = results[results["total_trades"] >= min_trades]
-            if valid.empty:
-                console.print(f"[yellow]  {sid} 所有組合交易數 < {min_trades}，用最佳報酬[/yellow]")
-                valid = results
-
-            best = valid.iloc[0]
+            best = results.iloc[0]
             best_params = {
                 k: (float(best[k]) if k == "vol_mult" else int(best[k]))
                 for k in PARAM_GRID

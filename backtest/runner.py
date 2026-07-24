@@ -14,6 +14,7 @@ def run_backtest(
     plot: bool = True,
     strategy_params: dict = None,
     extra_data: dict = None,      # {"market": df_0050} → 大盤過濾用
+    verbose: bool = True,
 ) -> dict:
     """
     執行回測並回傳績效指標。
@@ -60,9 +61,10 @@ def run_backtest(
     cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name="trades")
     cerebro.addanalyzer(bt.analyzers.Returns, _name="returns")
 
-    print(f"\n{'='*50}")
-    print(f"開始回測：{stock_id}  初始資金：{cash:,.0f}")
-    print(f"{'='*50}")
+    if verbose:
+        print(f"\n{'='*50}")
+        print(f"開始回測：{stock_id}  初始資金：{cash:,.0f}")
+        print(f"{'='*50}")
 
     results = cerebro.run()
     strat = results[0]
@@ -82,23 +84,31 @@ def run_backtest(
 
     avg_win = trades.get("won", {}).get("pnl", {}).get("average", 0)
     avg_loss = trades.get("lost", {}).get("pnl", {}).get("average", 0)
-    profit_factor = abs(avg_win / avg_loss) if avg_loss else float("inf")
+
+    # 獲利因子 = 總獲利 / 總虧損（非平均值比，平均值比是「賺賠比」）
+    won_total  = trades.get("won", {}).get("pnl", {}).get("total", 0)
+    lost_total = trades.get("lost", {}).get("pnl", {}).get("total", 0)
+    if lost_total:
+        profit_factor = abs(won_total / lost_total)
+    else:
+        profit_factor = float("inf") if won_total else 0.0
 
     metrics = {
         "stock_id": stock_id,
         "initial_capital": cash,
         "final_value": final_value,
         "total_return_pct": round(total_return, 2),
-        "sharpe_ratio": round(sharpe, 3) if sharpe else None,
+        "sharpe_ratio": round(sharpe, 3) if sharpe is not None else None,
         "max_drawdown_pct": round(dd.get("max", {}).get("drawdown", 0), 2),
         "total_trades": total_trades,
         "win_rate_pct": round(win_rate, 1),
         "avg_win": round(avg_win, 0),
         "avg_loss": round(avg_loss, 0),
-        "profit_factor": round(profit_factor, 2),
+        "profit_factor": round(profit_factor, 2) if profit_factor != float("inf") else float("inf"),
     }
 
-    _print_metrics(metrics)
+    if verbose:
+        _print_metrics(metrics)
 
     if plot:
         cerebro.plot(style="candlestick", barup="red", bardown="green")

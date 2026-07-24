@@ -24,11 +24,12 @@ def _serialize(engine: PaperEngine) -> dict:
         "date":                date.today().isoformat(),
         "positions": [
             {
-                "stock_id":        p.stock_id,
-                "entry_price":     p.entry_price,
-                "size":            p.size,
-                "entry_time":      p.entry_time.isoformat(),
-                "stop_loss_price": p.stop_loss_price,
+                "stock_id":         p.stock_id,
+                "entry_price":      p.entry_price,
+                "size":             p.size,
+                "entry_time":       p.entry_time.isoformat(),
+                "stop_loss_price":  p.stop_loss_price,
+                "entry_commission": p.entry_commission,
             }
             for p in engine.pm.all_positions()
         ],
@@ -64,6 +65,7 @@ def _load_into(engine: PaperEngine):
             size=pd_["size"],
             entry_time=datetime.fromisoformat(pd_["entry_time"]),
             stop_loss_price=pd_.get("stop_loss_price"),
+            entry_commission=pd_.get("entry_commission", 0.0),
         )
         engine.pm.positions[pos.stock_id] = pos
 
