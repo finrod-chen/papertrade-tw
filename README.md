@@ -41,7 +41,15 @@ python main.py scan
 python main.py paper
 ```
 
-Docker 部署：
+Docker 部署（image 由 GitHub Actions 自動建置並推到 Docker Hub）：
+
+```bash
+docker pull finrodchen/papertrade-tw:latest
+docker run -p 5000:5000 -e FINMIND_TOKEN=你的token \
+  -v ./logs:/app/logs -v ./data:/app/data finrodchen/papertrade-tw:latest
+```
+
+本機建置：
 
 ```bash
 docker build -t tw-paper-trade .
